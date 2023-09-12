@@ -90,20 +90,25 @@ function jsonEscape(str) {
 }
 
 async function getFileInfo(authToken1) {
+   console.log("authToken1 parameter ==----------------->",authToken1);
   var roamingSettings = Office.context.roamingSettings;
   // Retrieve the token
-  var authToken2 = roamingSettings.get("accessToken");
+  var authToken22 = roamingSettings.get("accessToken");
+  // var authToken2 = authToken1;
   var request = new XMLHttpRequest();
   let url = await emailUrl;
-  console.log("------>>>>");
-  console.log(authToken2);
+
+  console.log("authToken22------>>>>",authToken22);
   console.log("Function1");
   console.log(url);
   console.log("getFileInfo");
   request.open("GET", url, false);
   request.setRequestHeader("Content-Type", "application/json");
-  request.setRequestHeader("Authorization", "Bearer " + authToken2);
-  request.onreadystatechange = function () {
+  var authToken23 = roamingSettings.get("accessToken");
+  console.log("authToken22------>>>>",authToken22);
+  console.log("authToken23---------->",authToken23);
+  request.setRequestHeader("Authorization", "Bearer " + authToken23);
+  request.onreadystatechange = async function () {
     console.log("2222111IN FileInfo----->");
     if (request.readyState === 4) {
       if (request.status === 200) {
