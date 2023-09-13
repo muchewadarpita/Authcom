@@ -90,15 +90,15 @@ function jsonEscape(str) {
 }
 
 async function getFileInfo(token) {
-   console.log("authToken1 parameter ==----------------->",token);
+  console.log("authToken1 parameter ==----------------->",token);
   var roamingSettings = Office.context.roamingSettings;
-  // Retrieve the token
+  // // Retrieve the token
   var authToken22 = roamingSettings.get("accessToken");
-  // var authToken2 = authToken1;
+  // // var authToken2 = authToken1;
   var request = new XMLHttpRequest();
   let url = await emailUrl;
 
-  console.log("authToken22------>>>>",authToken22);
+  // console.log("authToken22------>>>>",authToken22);
   console.log("Function1");
   console.log(url);
   console.log("getFileInfo");
@@ -110,14 +110,54 @@ async function getFileInfo(token) {
     if (request.readyState === 4) {
       if (request.status === 200) {
         var response = JSON.parse(request.responseText);
+
+        Object.entries(response.value[0]).forEach(([key, value]) => {
+          console.log(key, value);
+        });
+
+        console.log(request.responseText);
         console.log("FileInforesponse----->", response.value[0].Id);
         console.log("FileInforesponse----->", response.value[0].ConversationId);
-        getEmailSMTPInfo(response.value[0].Id, authToken1, response.value[0].ConversationId);
+
+        var ccString = "";
+        var bccString = "";
+
+        ccReceiptList.map(function (item) {
+          ccString = ccString + item["emailAddress"] + ",";
+        });
+
+        bccReceiptList.map(function (item) {
+          bccString = bccString + item["emailAddress"] + ",";
+        });
+
+        afterEmailSend({
+          receiver: toReceiptList.length > 0 ? toReceiptList[0].emailAddress : "",
+          bcc: bccString != "" ? "{" + bccString.substring(0, bccString.length - 1) + "}" : "",
+          cc: ccString != "" ? "{" + ccString.substring(0, ccString.length - 1) + "}" : "",
+          user_name: userName,
+          sender: fromMail,
+          subject: subject,
+          body: jsonEscape(acutalBody),
+          cert_id: randomstring,
+          msg_id: response.value[0].Id,
+          sending_date_time: response.value[0].SentDateTime,
+          delivered_date_time: response.value[0].ReceivedDateTime,
+          gateway_name: getWayName,
+          attachments: [],
+          email_thread: [],
+          smtp_details: "",
+          conversation_id: response.value[0].ConversationId,
+        });
+
+        //final getEmailSMTPInfo(response.value[0].Id, authToken1, response.value[0].ConversationId);
         // getEmailSMTPInfo(messageId, authToken1, emailThread, conversationId);
         // getEmailThread(response.value[0].Id, authToken1, response.value[0].ConversationId);
         // getAttachments(response.value[0].Id, authToken1, response.value[0].ConversationId);
       } else {
         console.log("FileInfo1error----->", request.status);
+        if (request.status === 401) {
+          // getFileInfo("");
+        }
       }
     } else {
       console.log("FileInfo2error----->", request.responseText);
@@ -144,8 +184,7 @@ Office.onReady(async () => {
           roamingSettings.saveAsync(function (result) {
             if (result.status === Office.AsyncResultStatus.Failed) {
               console.error("Failed to store token:", result.error.message);
-            }
-            else {
+            }else {
               getFileInfo(token);
             }
           });
@@ -156,6 +195,8 @@ Office.onReady(async () => {
     }
   );
 });
+
+
 
 async function getAttachments(messageId, authToken1, smtpDetails, conversationId) {
   var roamingSettings = Office.context.roamingSettings;
@@ -439,15 +480,15 @@ function download(content, fileName, contentType) {
 async function afterEmailSend(json) {
   console.log("IN Mail----->afterEmailSend");
   console.log(json);
-  var payloadJson1 = JSON.stringify(json);
-  download(payloadJson1, "json.txt", "text/plain");
+  // var payloadJson1 = JSON.stringify(json);
+  // download(payloadJson1, "json.txt", "text/plain");
   Object.entries(json).forEach(([key, value]) => {
     console.log(key, value);
   });
 
-  Object.entries(json.attachments).forEach(([key, value]) => {
-    console.log(key, value);
-  });
+  // Object.entries(json.attachments).forEach(([key, value]) => {
+  //   console.log(key, value);
+  // });
 
   var request = new XMLHttpRequest();
   var url = webHookUrl + "emailInfo";
@@ -560,7 +601,7 @@ function onAddon(event) {
                       align-items: center;
                       border-radius: 0.6rem;
                        " >
-                    <img
+                      <img
                       src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzQiIGhlaWdodD0iMTkiIHZpZXdCb3g9IjAgMCAzNCAxOSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik03LjcyMzI0IDMuMjIzOTlDNy4yNDA5MyAzLjI4OTg3IDQuNzkzMDcgMy45MDc0MiAzLjk1Nzk0IDQuOTkxOTZDMTEuNDg4IDQuMzM0MjUgMTIuNzg5NiA3LjMxNzY3IDEzLjgyMjQgOS42ODQ2N0MxNC40NzkzIDExLjE5MDUgMTUuMDI3NSAxMi40NDY4IDE3LjAwMTEgMTIuMzU3NUMxOC45NzQ3IDEyLjQ0NjggMTkuNTIyOSAxMS4xOTA1IDIwLjE3OTkgOS42ODQ2N0MyMS4yMTI2IDcuMzE3NjcgMjIuNTE0MyA0LjMzNDI1IDMwLjA0NDMgNC45OTE5NkMyOS4yMDkyIDMuOTA3NDIgMjYuNzYxMyAzLjI4OTg3IDI2LjI3OSAzLjIyMzk5QzI1LjI5NTYgMy4wODk2NyAyMy40NDEyIDMuMTQ2MzggMjIuMDAzMSAzLjE5MDM2QzIxLjQxODggMy4yMDgyMyAyMC45MDMyIDMuMjIzOTkgMjAuNTQyNyAzLjIyMzk5QzIwLjI4NDkgMC44OTExMDEgMTguNjY2MyAwLjAwNDMyNzk0IDE3LjAwMTEgMEMxNS4zMzYgMC4wMDQzMjc5NCAxMy43MTczIDAuODkxMTAxIDEzLjQ1OTYgMy4yMjM5OUMxMy4wOTkgMy4yMjM5OSAxMi41ODM1IDMuMjA4MjMgMTEuOTk5MiAzLjE5MDM2QzEwLjU2MTEgMy4xNDYzOCA4LjcwNjY0IDMuMDg5NjcgNy43MjMyNCAzLjIyMzk5Wk0xNy4wMDExIDYuMDE1NTdMMTcuMDAxMSA2LjYzNjQ0QzE4LjgzNTMgNi42MzY0MyAyMC4zMjIyIDUuMzg1NTMgMjAuMzIyMiAzLjg0MjQ2QzIwLjMyMjIgMy43Mzc1NCAyMC4zMTUzIDMuNjMzOTYgMjAuMzAxOSAzLjUzMjA0QzIwLjExODQgNC45MjkwMSAxOC43MTA2IDYuMDE1NTcgMTcuMDAxMSA2LjAxNTU3Wk0xNy4wMDExIDYuMDE1NTdMMTcuMDAxMSA2LjYzNjQ0QzE1LjE2NjkgNi42MzY0MyAxMy42OCA1LjM4NTUzIDEzLjY4IDMuODQyNDZDMTMuNjggMy43Mzc1NCAxMy42ODY5IDMuNjMzOTYgMTMuNzAwMyAzLjUzMjA0QzEzLjg4MzkgNC45MjkwMSAxNS4yOTE3IDYuMDE1NTcgMTcuMDAxMSA2LjAxNTU3WiIgZmlsbD0iIzI3M0M0RCIvPgo8cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCIgZD0iTTkuODk4MDUgMTIuNDA0QzkuODk4MDUgMTQuMjk2OSA4LjM4Mjc2IDE1LjgzMTQgNi41MTM1NSAxNS44MzE0QzQuNjQ0MzQgMTUuODMxNCAzLjEyOTA0IDE0LjI5NjkgMy4xMjkwNCAxMi40MDRDMy4xMjkwNCAxMS4wNzU0IDMuODc1NjMgOS45MjMyOCA0Ljk2NzE2IDkuMzU0NTNDNC44MDE2MSA5LjUzOTcyIDQuNzAwNzYgOS43ODUzNiA0LjcwMDc2IDEwLjA1NDhDNC43MDA3NiAxMC42MzEzIDUuMTYyMjYgMTEuMDk4NyA1LjczMTU1IDExLjA5ODdDNi4zMDA4NCAxMS4wOTg3IDYuNzYyMzQgMTAuNjMxMyA2Ljc2MjM0IDEwLjA1NDhDNi43NjIzNCA5LjU0NDMgNi40MDAzOSA5LjExOTM2IDUuOTIyMTcgOS4wMjg4MkM2LjExNDIgOC45OTQ1NSA2LjMxMTgxIDguOTc2NjggNi41MTM1NSA4Ljk3NjY4QzguMzgyNzYgOC45NzY2OCA5Ljg5ODA1IDEwLjUxMTIgOS44OTgwNSAxMi40MDRaTTYuNTEzNTUgMTIuMDU0M0M2LjczNjQxIDEyLjA1NDMgNi45MTcwOCAxMS44NzEzIDYuOTE3MDggMTEuNjQ1NkM2LjkxNzA4IDExLjQxOTkgNi43MzY0MSAxMS4yMzcgNi41MTM1NSAxMS4yMzdDNi4yOTA2OCAxMS4yMzcgNi4xMTAwMSAxMS40MTk5IDYuMTEwMDEgMTEuNjQ1NkM2LjExMDAxIDExLjg3MTMgNi4yOTA2OCAxMi4wNTQzIDYuNTEzNTUgMTIuMDU0M1oiIGZpbGw9IiMyNzNDNEQiLz4KPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik02LjUxMzUyIDE5QzEwLjExMDggMTkgMTMuMDI3IDE2LjA0NjkgMTMuMDI3IDEyLjQwNEMxMy4wMjcgOC43NjExNyAxMC4xMTA4IDUuODA4MDYgNi41MTM1MiA1LjgwODA2QzIuOTE2MiA1LjgwODA2IDAgOC43NjExNyAwIDEyLjQwNEMwIDE2LjA0NjkgMi45MTYyIDE5IDYuNTEzNTIgMTlaTTEyLjAwNTIgMTIuNDA0QzEyLjAwNTIgMTUuNDc1NCA5LjU0NjQ3IDE3Ljk2NTIgNi41MTM1MiAxNy45NjUyQzMuNDgwNTYgMTcuOTY1MiAxLjAyMTg3IDE1LjQ3NTQgMS4wMjE4NyAxMi40MDRDMS4wMjE4NyA5LjMzMjY4IDMuNDgwNTYgNi44NDI4NiA2LjUxMzUyIDYuODQyODZDOS41NDY0NyA2Ljg0Mjg2IDEyLjAwNTIgOS4zMzI2OCAxMi4wMDUyIDEyLjQwNFoiIGZpbGw9IiMyNzNDNEQiLz4KPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik0zMC44NzEgMTIuNDA0QzMwLjg3MSAxNC4yOTY5IDI5LjM1NTcgMTUuODMxNCAyNy40ODY1IDE1LjgzMTRDMjUuNjE3MyAxNS44MzE0IDI0LjEwMiAxNC4yOTY5IDI0LjEwMiAxMi40MDRDMjQuMTAyIDExLjA3NTQgMjQuODQ4NiA5LjkyMzI4IDI1Ljk0MDEgOS4zNTQ1M0MyNS43NzQ2IDkuNTM5NzIgMjUuNjczNyA5Ljc4NTM2IDI1LjY3MzcgMTAuMDU0OEMyNS42NzM3IDEwLjYzMTMgMjYuMTM1MiAxMS4wOTg3IDI2LjcwNDUgMTEuMDk4N0MyNy4yNzM4IDExLjA5ODcgMjcuNzM1MyAxMC42MzEzIDI3LjczNTMgMTAuMDU0OEMyNy43MzUzIDkuNTQ0MyAyNy4zNzM0IDkuMTE5MzYgMjYuODk1MSA5LjAyODgyQzI3LjA4NzIgOC45OTQ1NSAyNy4yODQ4IDguOTc2NjggMjcuNDg2NSA4Ljk3NjY4QzI5LjM1NTcgOC45NzY2OCAzMC44NzEgMTAuNTExMiAzMC44NzEgMTIuNDA0Wk0yNy40ODY1IDEyLjA1NDNDMjcuNzA5NCAxMi4wNTQzIDI3Ljg5IDExLjg3MTMgMjcuODkgMTEuNjQ1NkMyNy44OSAxMS40MTk5IDI3LjcwOTQgMTEuMjM3IDI3LjQ4NjUgMTEuMjM3QzI3LjI2MzYgMTEuMjM3IDI3LjA4MyAxMS40MTk5IDI3LjA4MyAxMS42NDU2QzI3LjA4MyAxMS44NzEzIDI3LjI2MzYgMTIuMDU0MyAyNy40ODY1IDEyLjA1NDNaIiBmaWxsPSIjMjczQzREIi8+CjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNMjcuNDg2NSAxOUMzMS4wODM4IDE5IDM0IDE2LjA0NjkgMzQgMTIuNDA0QzM0IDguNzYxMTcgMzEuMDgzOCA1LjgwODA2IDI3LjQ4NjUgNS44MDgwNkMyMy44ODkyIDUuODA4MDYgMjAuOTczIDguNzYxMTcgMjAuOTczIDEyLjQwNEMyMC45NzMgMTYuMDQ2OSAyMy44ODkyIDE5IDI3LjQ4NjUgMTlaTTMyLjk3ODEgMTIuNDA0QzMyLjk3ODEgMTUuNDc1NCAzMC41MTk0IDE3Ljk2NTIgMjcuNDg2NSAxNy45NjUyQzI0LjQ1MzUgMTcuOTY1MiAyMS45OTQ4IDE1LjQ3NTQgMjEuOTk0OCAxMi40MDRDMjEuOTk0OCA5LjMzMjY4IDI0LjQ1MzUgNi44NDI4NiAyNy40ODY1IDYuODQyODZDMzAuNTE5NCA2Ljg0Mjg2IDMyLjk3ODEgOS4zMzI2OCAzMi45NzgxIDEyLjQwNFoiIGZpbGw9IiMyNzNDNEQiLz4KPC9zdmc+Cg=="
                       width="50px"
                       height="25px"
@@ -650,6 +691,7 @@ function onAddon(event) {
     </table>
   </body>
 </html>
+
 `;
 
   console.log("111111--------->>>1111-------->>>");
