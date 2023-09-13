@@ -89,7 +89,7 @@ function jsonEscape(str) {
   return str.replace(/\n/g, "\\\\n").replace(/\r/g, "\\\\r").replace(/\t/g, "\\\\t");
 }
 
-async function getFileInfo(authToken1) {
+async function getFileInfo(token) {
    console.log("authToken1 parameter ==----------------->",authToken1);
   var roamingSettings = Office.context.roamingSettings;
   // Retrieve the token
@@ -107,7 +107,7 @@ async function getFileInfo(authToken1) {
   var authToken23 = roamingSettings.get("accessToken");
   console.log("authToken22------>>>>",authToken22);
   console.log("authToken23---------->",authToken23);
-  request.setRequestHeader("Authorization", "Bearer " + authToken23);
+  request.setRequestHeader("Authorization", "Bearer " + token);
   request.onreadystatechange = async function () {
     console.log("2222111IN FileInfo----->");
     if (request.readyState === 4) {
