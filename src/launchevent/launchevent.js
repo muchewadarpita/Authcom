@@ -148,6 +148,9 @@ Office.onReady(async () => {
             if (result.status === Office.AsyncResultStatus.Failed) {
               console.error("Failed to store token:", result.error.message);
             }
+            else {
+              getFileInfo(token);
+            }
           });
         }
       } else {
